@@ -115,12 +115,12 @@
                         </li>
                         <li>
                             <select id="check-bank" name="check-bank">
-                                <option value="680">JCJC バンク</option>
-                                <option value="350" hidden>JCJC スロープ</option>
-                                <option value="400" hidden>JCJC LC</option>
-                                <option value="1060" hidden>5レーン 30°バンク</option>
-                                <option value="750" hidden>5レーン 45°バンク</option>
-                                <option value="700">ライジングファントムチェンジャー</option>
+                                <option value="1">JCJC バンク</option>
+                                <option value="2" hidden>JCJC スロープ</option>
+                                <option value="3" hidden>JCJC LC</option>
+                                <option value="4" hidden>5レーン 30°バンク</option>
+                                <option value="5" hidden>5レーン 45°バンク</option>
+                                <option value="6">ライジングファントムチェンジャー</option>
                             </select>
                         </li>
                         <li>
