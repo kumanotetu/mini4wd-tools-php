@@ -49,8 +49,7 @@ const init = () => {
 const onClickCalc = () => {
     resetInputParams();
     setCookie();
-    checkMachineParameter();
-    calcBrakeSetting();
+    openCalcBrakeSettingAPI();
 }
 
 /* Set Cookie from Machine Parameter. */
@@ -91,27 +90,6 @@ const changeTire = () => {
     }
 }
 
-/* Check Machine Parameter. */
-const checkMachineParameter = () => {
-    let errMessage = document.getElementById('err-message');
-    errMessage.innerText = "";
-
-    let wh_base = parseFloat(document.getElementById('wh-base').value);
-    let t_size = parseFloat(document.getElementById('t-size').value);
-    let f_length = parseFloat(document.getElementById('f-length').value);
-    let f_width = parseFloat(document.getElementById('f-width').value);
-    let r_length = parseFloat(document.getElementById('r-length').value);
-    let r_width = parseFloat(document.getElementById('r-width').value);
-
-    if (165 < (wh_base + f_length + f_width + r_length + r_width)) {
-        errMessage.innerText = "全長が165mmを超えています";
-    } else if (wh_base < 0 || t_size < 0 || f_length < 0 || f_width < 0 || r_length < 0 || r_width < 0) {
-        errMessage.innerText = "入力値にマイナスが設定されています";
-    } else if (wh_base == 0 || t_size == 0 || f_length == 0 || f_width == 0 || r_length == 0 || r_width == 0) {
-        errMessage.innerText = "入力値に0が設定されています";
-    }
-}
-
 const resetInputParams = () => {
     resetParam('wh-base');
     resetParam('t-size');
@@ -128,13 +106,9 @@ const nullIsZero = (value) => {
     return "" == value ? "0" : value;
 };
 
-/* Calc */
-const calcBrakeSetting = () => {
-    let errLength = document.getElementById('err-message').innerText.length;
-    if (errLength > 0) {
-        alert("入力値に異常があるため計算しません。");
-        return;
-    }
+/* Open CalcBrakeSetting API */
+const openCalcBrakeSettingAPI = () => {
+    /* Get Input Parameter */
     let wh_base = parseFloat(document.getElementById('wh-base').value);
     let t_size = parseFloat(document.getElementById('t-size').value);
     let f_length = parseFloat(document.getElementById('f-length').value);
@@ -143,24 +117,41 @@ const calcBrakeSetting = () => {
     let r_width = parseFloat(document.getElementById('r-width').value);
     let check_bank = parseFloat(document.getElementById('check-bank').value);
 
-    /* Calc height. */
-    let f_height_out = check_bank - Math.sqrt((check_bank) ** 2 - (wh_base / 2 + f_length + f_width) ** 2) - (check_bank - (Math.sqrt((check_bank - 2 / t_size) ** 2 - (wh_base / 2) ** 2) + 2 / t_size));
-    let f_height_in = check_bank - Math.sqrt((check_bank) ** 2 - (wh_base / 2 + f_length) ** 2) - (check_bank - (Math.sqrt((check_bank - 2 / t_size) ** 2 - (wh_base / 2) ** 2) + 2 / t_size));
-    let r_height_out = check_bank - Math.sqrt((check_bank) ** 2 - (wh_base / 2 + r_length + r_width) ** 2) - (check_bank - (Math.sqrt((check_bank - 2 / t_size) ** 2 - (wh_base / 2) ** 2) + 2 / t_size));
-    let r_height_in = check_bank - Math.sqrt((check_bank) ** 2 - (wh_base / 2 + r_length) ** 2) - (check_bank - (Math.sqrt((check_bank - 2 / t_size) ** 2 - (wh_base / 2) ** 2) + 2 / t_size));
-
-    /* Calc angle. */
-    var rediansToDegrees = (angle) => angle * 180 / Math.PI;
-    let f_angle = rediansToDegrees(Math.asin((f_height_out - f_height_in) / f_width));
-    let r_angle = rediansToDegrees(Math.asin((r_height_out - r_height_in) / r_width));
-
-    document.getElementById('f-height-out').value = Math.round(f_height_out * 100) / 100;
-    document.getElementById('f-height-in').value = Math.round(f_height_in * 100) / 100;
-    document.getElementById('r-height-out').value = Math.round(r_height_out * 100) / 100;
-    document.getElementById('r-height-in').value = Math.round(r_height_in * 100) / 100;
-
-    document.getElementById('f-angle').value = Math.round(f_angle * 10) / 10;
-    document.getElementById('r-angle').value = Math.round(r_angle * 10) / 10;
+    let req = new XMLHttpRequest();
+    req.onload = () => {
+        console.log("readyState:"+req.readyState);
+        console.log("status:"+req.status);
+        console.log(req.response);
+        if (req.readyState == 4 && req.status == 200) {
+            let errMessage = document.getElementById('err-message');
+            errMessage.innerText = "";
+            let data = req.response;
+            if (data.status == 'OK') {
+                document.getElementById('f-height-out').value = data.result_parameter.f_height_out;
+                document.getElementById('f-height-in').value = data.result_parameter.f_height_in;
+                document.getElementById('r-height-out').value = data.result_parameter.r_height_out;
+                document.getElementById('r-height-in').value = data.result_parameter.r_height_in;
+    
+                document.getElementById('f-angle').value = data.result_parameter.f_angle;
+                document.getElementById('r-angle').value = data.result_parameter.r_angle;
+            } else {
+                errMessage.innerText = data.message;
+            }
+            
+        }
+    }
+    let URL = "https://dev.tools.mini4wd-engineer.com/api/api.php";
+    URL += "?wh-base="  + wh_base;
+    URL += "&t-size="   + t_size;
+    URL += "&f-length=" + f_length;
+    URL += "&f-width="  + f_width;
+    URL += "&r-length=" + r_length;
+    URL += "&r-width="  + r_width;
+    URL += "&check-bank=" + check_bank;
+    console.log(URL);
+    req.open('GET', URL, true);
+    req.responseType = 'json';
+    req.send(null);
 }
 
 /* Open Coke Sound. */
